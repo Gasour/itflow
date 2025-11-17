@@ -133,9 +133,6 @@ $network_count = intval($row['network_count']);
 //Other Count
 $other_count = intval($row['other_count']);
 
-//Rebuild URL
-$url_query_strings_sort = http_build_query($get_copy);
-
 $sql = mysqli_query(
     $mysqli,
     "SELECT SQL_CALC_FOUND_ROWS * FROM assets
