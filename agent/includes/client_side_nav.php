@@ -30,7 +30,6 @@
                         <i class="nav-icon fas fa-address-book"></i>
                         <p>
                             Contacts
-                            <span href="#" class="fas fa-plus-circle right ajax-modal" data-modal-url="/agent/modals/contact/contact_add.php?client_id=<?= $client_id ?>"></span>
                             <?php
                             if ($num_contacts > 0) { ?>
                                 <span class="right badge text-light"><?php echo $num_contacts; ?></span>
@@ -44,7 +43,6 @@
                         <i class="nav-icon fas fa-map-marker-alt"></i>
                         <p>
                             Locations
-                            <span href="#" class="fas fa-plus-circle right ajax-modal" data-modal-url="/agent/modals/location/location_add.php?client_id=<?= $client_id ?>"></span>
                             <?php
                             if ($num_locations > 0) { ?>
                                 <span class="right badge text-light"><?php echo $num_locations; ?></span>
@@ -61,7 +59,6 @@
                             <i class="nav-icon fas fa-life-ring"></i>
                             <p>
                                 Tickets
-                                <span href="#" class="fas fa-plus-circle right ajax-modal" data-modal-url="/agent/modals/ticket/ticket_add_v2.php?client_id=<?= $client_id ?>" data-modal-size="lg"></span>
                                 <?php
                                 if ($num_active_tickets > 0) { ?>
                                     <span class="right badge <?php if ($num_active_tickets > 0) { ?> badge-danger <?php } ?> text-light"><?php echo $num_active_tickets; ?></span>
@@ -76,7 +73,6 @@
                             <i class="nav-icon fas fa-redo-alt"></i>
                             <p>
                                 Recurring Tickets
-                                <span href="#" class="fas fa-plus-circle right ajax-modal" data-modal-url="/agent/modals/recurring_ticket/recurring_ticket_add.php?client_id=<?= $client_id ?>" data-modal-size="lg"></span>
                                 <?php
                                 if ($num_recurring_tickets) { ?>
                                     <span class="right badge"><?php echo $num_recurring_tickets; ?></span>
@@ -91,7 +87,6 @@
                             <i class="nav-icon fas fa-project-diagram"></i>
                             <p>
                                 Projects
-                                <span href="#" class="fas fa-plus-circle right ajax-modal" data-modal-url="/agent/modals/project/project_add.php?client_id=<?= $client_id ?>"></span>
                                 <?php if ($num_active_projects) { ?>
                                     <span class="right badge text-light" data-toggle="tooltip" title="Open Projects"><?php echo $num_active_projects; ?></span>
                                 <?php } ?>
@@ -106,7 +101,6 @@
                         <i class="nav-icon fas fa-building"></i>
                         <p>
                             Vendors
-                            <span href="#" class="fas fa-plus-circle right ajax-modal" data-modal-url="/agent/modals/vendor/vendor_add.php?client_id=<?= $client_id ?>"></span>
                             <?php
                             if ($num_vendors > 0) { ?>
                                 <span class="right badge text-light"><?php echo $num_vendors; ?></span>
@@ -138,7 +132,6 @@
                                 <i class="nav-icon fas fa-desktop"></i>
                                 <p>
                                     Assets
-                                    <span href="#" class="fas fa-plus-circle right ajax-modal" data-modal-url="/agent/modals/asset/asset_add.php?client_id=<?= $client_id ?>"></span>
                                     <?php
                                     if ($num_assets > 0) { ?>
                                         <span class="right badge text-light"><?php echo $num_assets; ?></span>
@@ -152,7 +145,6 @@
                                 <i class="nav-icon fas fa-cube"></i>
                                 <p>
                                     Licenses
-                                    <span href="#" class="fas fa-plus-circle right ajax-modal" data-modal-url="/agent/modals/software/software_add.php?client_id=<?= $client_id ?>"></span>
                                     <?php
                                     if ($num_software > 0) { ?>
                                         <span class="right badge <?php if ($num_software_expiring > 0) { ?> badge-warning text-dark <?php } ?> <?php if ($num_software_expired > 0) { ?> badge-danger <?php } ?> text-white"><?php echo $num_software; ?></span>
@@ -167,7 +159,6 @@
                                     <i class="nav-icon fas fa-key"></i>
                                     <p>
                                         Credentials
-                                        <span href="#" class="fas fa-plus-circle right ajax-modal" data-modal-url="/agent/modals/credential/credential_add.php?client_id=<?= $client_id ?>"></span>
                                         <?php
                                         if ($num_credentials > 0) { ?>
                                             <span class="right badge text-light"><?php echo $num_credentials; ?></span>
@@ -182,7 +173,6 @@
                                 <i class="nav-icon fas fa-network-wired"></i>
                                 <p>
                                     Networks
-                                    <span href="#" class="fas fa-plus-circle right ajax-modal" data-modal-url="/agent/modals/network/network_add.php?client_id=<?= $client_id ?>"></span>
                                     <?php
                                     if ($num_networks > 0) { ?>
                                         <span class="right badge text-light"><?php echo $num_networks; ?></span>
@@ -196,7 +186,6 @@
                                 <i class="nav-icon fas fa-server"></i>
                                 <p>
                                     Racks
-                                    <span href="#" class="fas fa-plus-circle right ajax-modal" data-modal-url="/agent/modals/rack/rack_add.php?client_id=<?= $client_id ?>"></span>
                                     <?php
                                     if ($num_racks > 0) { ?>
                                         <span class="right badge text-light"><?php echo $num_racks; ?></span>
@@ -210,7 +199,6 @@
                                 <i class="nav-icon fas fa-lock"></i>
                                 <p>
                                     Certificates
-                                    <span href="#" class="fas fa-plus-circle right ajax-modal" data-modal-url="/agent/modals/certificate/certificate_add.php?client_id=<?= $client_id ?>"></span>
                                     <?php
                                     if ($num_certificates > 0) { ?>
                                         <span class="right badge <?php if ($num_certificates_expiring > 0) { ?> badge-warning text-dark <?php } ?> <?php if ($num_certificates_expired > 0) { ?> badge-danger <?php } ?> text-white"><?php echo $num_certificates; ?></span>
@@ -224,7 +212,6 @@
                                 <i class="nav-icon fas fa-globe"></i>
                                 <p>
                                     Domains
-                                    <span href="#" class="fas fa-plus-circle right ajax-modal" data-modal-url="/agent/modals/domain/domain_add.php?client_id=<?= $client_id ?>"></span>
                                     <?php
                                     if ($num_domains > 0) { ?>
                                         <span class="right badge <?php if (isset($num_domains_expiring)) { ?> badge-warning text-dark<?php } ?> <?php if (isset($num_domains_expired)) { ?> badge-danger <?php } ?> text-white"><?php echo $num_domains; ?></span>
@@ -238,7 +225,6 @@
                                 <i class="nav-icon fas fa-stream"></i>
                                 <p>
                                     Services
-                                    <span href="#" class="fas fa-plus-circle right ajax-modal" data-modal-url="/agent/modals/service/service_add.php?client_id=<?= $client_id ?>"></span>
                                     <?php
                                     if ($num_services > 0) { ?>
                                         <span class="right badge text-light"><?php echo $num_services; ?></span>
@@ -252,7 +238,6 @@
                                 <i class="nav-icon fas fa-folder"></i>
                                 <p>
                                     Documents
-                                    <span href="#" class="fas fa-plus-circle right ajax-modal" data-modal-url="/agent/modals/document/document_add.php?client_id=<?= $client_id ?>" data-modal-size="lg"></span>
                                     <?php
                                     if ($num_documents > 0) { ?>
                                         <span class="right badge text-light"><?php echo $num_documents; ?></span>
@@ -269,7 +254,6 @@
                             <i class="nav-icon fas fa-paperclip"></i>
                             <p>
                                 Files
-                                <span href="#" class="fas fa-plus-circle right ajax-modal" data-modal-url="/agent/modals/file/file_upload.php?client_id=<?= $client_id ?>"></span>
                                 <?php
                                 if ($num_files > 0) { ?>
                                     <span class="right badge text-light"><?php echo $num_files; ?></span>
@@ -291,7 +275,6 @@
                                 <i class="nav-icon fas fa-file-invoice"></i>
                                 <p>
                                     Invoices
-                                    <span href="#" class="fas fa-plus-circle right ajax-modal" data-modal-url="/agent/modals/invoice/invoice_add.php?client_id=<?= $client_id ?>"></span>
                                     <?php
                                     if ($num_invoices > 0) { ?>
                                         <span class="right badge <?php if ($num_invoices_open > 0) { ?> badge-danger <?php } ?> text-light"><?php echo $num_invoices; ?></span>
@@ -305,7 +288,6 @@
                                 <i class="nav-icon fas fa-redo-alt"></i>
                                 <p>
                                     Recurring Invoices
-                                    <span href="#" class="fas fa-plus-circle right ajax-modal" data-modal-url="/agent/modals/recurring_invoice/recurring_invoice_add.php?client_id=<?= $client_id ?>"></span>
                                     <?php
                                     if ($num_recurring_invoices) { ?>
                                         <span class="right badge"><?php echo $num_recurring_invoices; ?></span>
@@ -319,7 +301,6 @@
                                 <i class="nav-icon fas fa-comment-dollar"></i>
                                 <p>
                                     Quotes
-                                    <span href="#" class="fas fa-plus-circle right ajax-modal" data-modal-url="/agent/modals/quote/quote_add.php?client_id=<?= $client_id ?>"></span>
                                     <?php
                                     if ($num_quotes > 0) { ?>
                                         <span class="right badge text-light"><?php echo $num_quotes; ?></span>
@@ -350,7 +331,6 @@
                             <i class="nav-icon fas fa-route"></i>
                             <p>
                                 Trips
-                                <span href="#" class="fas fa-plus-circle right ajax-modal" data-modal-url="/agent/modals/trip/trip_add.php?client_id=<?= $client_id ?>"></span>
                                 <?php
                                 if ($num_trips > 0) { ?>
                                     <span class="right badge text-light"><?php echo $num_trips; ?></span>
