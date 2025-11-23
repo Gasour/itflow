@@ -1643,3 +1643,86 @@ function sanitize_filename($filename, $strict = false) {
 
     return $filename;
 }
+
+function saveBase64Images(string $html, string $baseFsPath, string $baseWebPath, int $ownerId): string {
+    // Normalize paths
+    $baseFsPath  = rtrim($baseFsPath, '/\\') . '/';
+    $baseWebPath = rtrim($baseWebPath, '/\\') . '/';
+
+    $targetDir = $baseFsPath . $ownerId . "/";
+
+    $folderCreated = false;   // <-- NEW FLAG
+    $savedAny      = false;   // <-- Track if ANY images processed
+
+    libxml_use_internal_errors(true);
+    $dom = new DOMDocument();
+    $dom->loadHTML('<?xml encoding="utf-8" ?>' . $html);
+    libxml_clear_errors();
+
+    $imgs = $dom->getElementsByTagName('img');
+
+    foreach ($imgs as $img) {
+        $src = $img->getAttribute('src');
+
+        // Match base64 images
+        if (preg_match('/^data:image\/([a-zA-Z0-9+]+);base64,(.*)$/s', $src, $matches)) {
+
+            $savedAny = true;  // <-- We are actually saving at least 1 image
+
+            // Create folder ONLY when needed
+            if (!$folderCreated) {
+                if (!is_dir($targetDir)) {
+                    mkdir($targetDir, 0775, true);
+                }
+                $folderCreated = true;
+            }
+
+            $mimeType = strtolower($matches[1]);
+            $base64   = $matches[2];
+
+            $binary = base64_decode($base64);
+            if ($binary === false) {
+                continue;
+            }
+
+            // Extension mapping
+            switch ($mimeType) {
+                case 'jpeg':
+                case 'jpg': $ext = 'jpg'; break;
+                case 'png': $ext = 'png'; break;
+                case 'gif': $ext = 'gif'; break;
+                case 'webp': $ext = 'webp'; break;
+                default: $ext = 'png';
+            }
+
+            // Secure random filename
+            $uid = bin2hex(random_bytes(16));
+            $filename = "img_{$uid}.{$ext}";
+
+            $filePath = $targetDir . $filename;
+
+            if (file_put_contents($filePath, $binary) !== false) {
+                $webPath = "/" . $baseWebPath . $ownerId . "/" . $filename;
+                $img->setAttribute('src', $webPath);
+            }
+        }
+    }
+
+    // If no images were processed, return original HTML immediately
+    if (!$savedAny) {
+        return $html;
+    }
+
+    // Extract body content only
+    $body = $dom->getElementsByTagName('body')->item(0);
+
+    if ($body) {
+        $innerHTML = '';
+        foreach ($body->childNodes as $child) {
+            $innerHTML .= $dom->saveHTML($child);
+        }
+        return $innerHTML;
+    }
+
+    return $html;
+}

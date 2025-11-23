@@ -16,9 +16,22 @@ if (isset($_POST['add_document'])) {
     $asset_id = intval($_POST['asset'] ?? 0);
 
     // Document add query
-    mysqli_query($mysqli,"INSERT INTO documents SET document_name = '$name', document_description = '$description', document_content = '$content', document_content_raw = '$content_raw', document_folder_id = $folder, document_created_by = $session_user_id, document_client_id = $client_id");
+    mysqli_query($mysqli,"INSERT INTO documents SET document_name = '$name', document_description = '$description', document_content = '', document_content_raw = '$content_raw', document_folder_id = $folder, document_created_by = $session_user_id, document_client_id = $client_id");
     
     $document_id = mysqli_insert_id($mysqli);
+
+    $processed_content = mysqli_escape_string(
+        $mysqli,
+        saveBase64Images(
+            $_POST['content'],
+            $_SERVER['DOCUMENT_ROOT'] . "/uploads/documents/",
+            "uploads/documents/",
+            $document_id
+        )
+    );
+
+    // Document update content
+    mysqli_query($mysqli,"UPDATE documents SET document_content = '$processed_content' WHERE document_id = $document_id");
 
     if ($contact_id) {
         mysqli_query($mysqli,"INSERT INTO contact_documents SET contact_id = $contact_id, document_id = $document_id");
