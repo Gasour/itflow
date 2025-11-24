@@ -12,6 +12,8 @@ uploads/document_templates/*
 !uploads/document_templates/index.php
 uploads/expenses/*
 !uploads/expenses/index.php
+uploads/recurring_tickets/*
+!uploads/recurring_tickets/index.php
 uploads/settings/*
 !uploads/settings/index.php
 uploads/users/*
@@ -20,6 +22,8 @@ uploads/tmp/*
 !uploads/tmp/index.php
 uploads/tickets/*
 !uploads/tickets/index.php
+uploads/ticket_templates/*
+!uploads/ticket_templates/index.php
 .idea/*
 plugins/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer/HTML/*
 !plugins/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer/HTML/.gitkeep
