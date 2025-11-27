@@ -368,22 +368,24 @@ $num_root_items = intval($row_root_files['num']) + intval($row_root_docs['num'])
         <h3 class="card-title mt-2"><i class="fa fa-fw fa-folder mr-2"></i>Files</h3>
 
         <div class="card-tools">
+
             <div class="btn-group">
-                <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle" data-toggle="dropdown"><i class="fas fa-fw fa-plus mr-2"></i>New</button>
-                <div class="dropdown-menu">
-
-
+                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                    <i class="fas fa-fw fa-plus mr-2"></i>New
+                </button>
+                <div class="dropdown-menu dropdown-menu-right">
                     <a class="dropdown-item text-dark ajax-modal" href="#"
                        data-modal-url="modals/file/file_upload.php?client_id=<?= $client_id ?>&folder_id=<?= $get_folder_id ?>">
                         <i class="fas fa-fw fa-cloud-upload-alt mr-2"></i>Upload File
                     </a>
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item text-dark ajax-modal" href="#"
-                       data-modal-url="modals/document/document_add.php?client_id=<?= $client_id ?>&folder_id=<?= $get_folder_id ?>">
+                        data-modal-url="modals/document/document_add.php?client_id=<?= $client_id ?>&folder_id=<?= $get_folder_id ?>"
+                        data-modal-size="lg">
                         <i class="fas fa-fw fa-file-alt mr-2"></i>Document
                     </a>
-                    <a class="dropdown-item text-dark" href="#" data-toggle="modal"
-                       data-target="#addDocumentFromTemplateModal">
+                    <a class="dropdown-item text-dark ajax-modal" href="#"
+                        data-modal-url="modals/document/document_add_from_template.php?client_id=<?= $client_id ?>&folder_id=<?= $get_folder_id ?>">
                         <i class="fas fa-fw fa-file mr-2"></i>Document from Template
                     </a>
                     <div class="dropdown-divider"></div>
