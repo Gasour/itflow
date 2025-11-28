@@ -274,7 +274,7 @@ if (isset($_GET['ticket_id'])) {
 
 
         // Get ticket replies
-        $sql_ticket_replies = mysqli_query($mysqli, "SELECT * FROM ticket_replies 
+        $sql_ticket_replies = mysqli_query($mysqli, "SELECT * FROM ticket_replies
             LEFT JOIN users ON ticket_reply_by = user_id
             LEFT JOIN contacts ON ticket_reply_by = contact_id
             WHERE ticket_reply_ticket_id = $ticket_id
@@ -340,7 +340,7 @@ if (isset($_GET['ticket_id'])) {
         $sql_ticket_collaborators = mysqli_query($mysqli, "
             SELECT GROUP_CONCAT(DISTINCT user_name SEPARATOR ', ') AS user_names
             FROM users
-            LEFT JOIN ticket_replies ON user_id = ticket_reply_by 
+            LEFT JOIN ticket_replies ON user_id = ticket_reply_by
             WHERE ticket_reply_archived_at IS NULL AND ticket_reply_ticket_id = $ticket_id
         ");
 
@@ -461,7 +461,7 @@ if (isset($_GET['ticket_id'])) {
         <div class="card-group mb-3">
 
             <div class="card card-body">
-                
+
                 <div title="<?php echo $ticket_updated_at; ?>">
                     <i class="fa fa-fw fa-history text-secondary mr-2"></i>Updated: <strong><?php echo $ticket_updated_at_ago; ?></strong>
                 </div>
@@ -587,7 +587,7 @@ if (isset($_GET['ticket_id'])) {
                 <!-- Only show ticket reply modal if status is not closed -->
                 <?php if (lookupUserPermission("module_support") >= 2 && empty($ticket_resolved_at) && empty($ticket_closed_at)) { ?>
 
-                    
+
 
                         <form action="post.php" method="post" autocomplete="off">
                             <input type="hidden" name="ticket_id" id="ticket_id" value="<?php echo $ticket_id; ?>">
@@ -677,7 +677,7 @@ if (isset($_GET['ticket_id'])) {
                             </div>
 
                         </form>
-                   
+
                     <!-- End IF for reply modal -->
                 <?php } ?>
 
@@ -813,7 +813,7 @@ if (isset($_GET['ticket_id'])) {
                 <div class="card <?php if(!$ticket_resolved_at) { echo "collapsed-card"; } ?>">
                     <div class="card-header">
                         <h5 class="card-title"><i class="fas fa-fw fa-life-ring mr-2"></i>Ticket Details</h5>
-                
+
                         <div class="card-tools">
                             <button type="button" class="btn btn-tool" data-card-widget="collapse">
                                 <i class="fas fa-chevron-down"></i>

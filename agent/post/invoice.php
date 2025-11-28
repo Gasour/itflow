@@ -17,16 +17,22 @@ if (isset($_POST['add_invoice'])) {
     // Get Net Terms
     $client_net_terms = intval(getFieldById('clients', $client_id, 'client_net_terms'));
 
-    //Get the last Invoice Number and add 1 for the new invoice number
-    $invoice_number = $config_invoice_next_number;
-    $new_config_invoice_next_number = $config_invoice_next_number + 1;
-    mysqli_query($mysqli,"UPDATE settings SET config_invoice_next_number = $new_config_invoice_next_number WHERE company_id = 1");
+    // Atomically increment and get the new invoice number
+    mysqli_query($mysqli, "
+        UPDATE settings
+        SET
+            config_invoice_next_number = LAST_INSERT_ID(config_invoice_next_number),
+            config_invoice_next_number = config_invoice_next_number + 1
+        WHERE company_id = 1
+    ");
+
+    $invoice_number = mysqli_insert_id($mysqli);
 
     //Generate a unique URL key for clients to access
     $url_key = randomString(156);
 
     mysqli_query($mysqli,"INSERT INTO invoices SET invoice_prefix = '$config_invoice_prefix', invoice_number = $invoice_number, invoice_scope = '$scope', invoice_date = '$date', invoice_due = DATE_ADD('$date', INTERVAL $client_net_terms day), invoice_discount_amount = '$invoice_discount', invoice_amount = '$invoice_amount', invoice_currency_code = '$session_company_currency', invoice_category_id = $category, invoice_status = 'Draft', invoice_url_key = '$url_key', invoice_client_id = $client_id");
-    
+
     $invoice_id = mysqli_insert_id($mysqli);
 
     mysqli_query($mysqli,"INSERT INTO history SET history_status = 'Draft', history_description = 'Invoice created', history_invoice_id = $invoice_id");
@@ -81,16 +87,9 @@ if (isset($_POST['add_invoice_copy'])) {
     $date = sanitizeInput($_POST['date']);
 
     //Get Net Terms
-    $sql = mysqli_query($mysqli,"SELECT client_net_terms FROM clients, invoices WHERE client_id = invoice_client_id AND invoice_id = $invoice_id");
+    $sql = mysqli_query($mysqli,"SELECT * FROM clients, invoices WHERE client_id = invoice_client_id AND invoice_id = $invoice_id");
     $row = mysqli_fetch_array($sql);
     $client_net_terms = intval($row['client_net_terms']);
-
-    $new_invoice_number = $config_invoice_next_number;
-    $new_config_invoice_next_number = $config_invoice_next_number + 1;
-    mysqli_query($mysqli,"UPDATE settings SET config_invoice_next_number = $new_config_invoice_next_number WHERE company_id = 1");
-
-    $sql = mysqli_query($mysqli,"SELECT * FROM invoices WHERE invoice_id = $invoice_id");
-    $row = mysqli_fetch_array($sql);
     $invoice_scope = sanitizeInput($row['invoice_scope']);
     $invoice_discount_amount = floatval($row['invoice_discount_amount']);
     $invoice_amount = floatval($row['invoice_amount']);
@@ -100,6 +99,17 @@ if (isset($_POST['add_invoice_copy'])) {
     $category_id = intval($row['invoice_category_id']);
     $old_invoice_prefix = sanitizeInput($row['invoice_prefix']);
     $old_invoice_number = intval($row['invoice_number']);
+
+    // Atomically increment and get the new invoice number
+    mysqli_query($mysqli, "
+        UPDATE settings
+        SET
+            config_invoice_next_number = LAST_INSERT_ID(config_invoice_next_number),
+            config_invoice_next_number = config_invoice_next_number + 1
+        WHERE company_id = 1
+    ");
+
+    $new_invoice_number = mysqli_insert_id($mysqli);
 
     //Generate a unique URL key for clients to access
     $url_key = randomString(156);
@@ -206,7 +216,7 @@ if (isset($_GET['cancel_invoice'])) {
 }
 
 if (isset($_GET['delete_invoice'])) {
-    
+
     $invoice_id = intval($_GET['delete_invoice']);
 
     // Get Invoice Number and Prefix and Client ID for Logging
@@ -251,7 +261,7 @@ if (isset($_GET['delete_invoice'])) {
 }
 
 if (isset($_POST['add_invoice_item'])) {
-    
+
     enforceUserPermission('module_sales', 2);
 
     $invoice_id = intval($_POST['invoice_id']);
@@ -264,7 +274,7 @@ if (isset($_POST['add_invoice_item'])) {
     $product_id = intval($_POST['product_id']);
 
     $subtotal = $price * $qty;
-    
+
     // Update Product Inventory
     if ($product_id) {
          // Only enforce stock for tangible products
@@ -334,7 +344,7 @@ if (isset($_POST['add_invoice_item'])) {
 }
 
 if (isset($_POST['invoice_note'])) {
-    
+
     enforceUserPermission('module_sales', 2);
 
     $invoice_id = intval($_POST['invoice_id']);
@@ -358,7 +368,7 @@ if (isset($_POST['invoice_note'])) {
 }
 
 if (isset($_POST['edit_item'])) {
-    
+
     enforceUserPermission('module_sales', 2);
 
     $item_id = intval($_POST['item_id']);
@@ -405,7 +415,7 @@ if (isset($_POST['edit_item'])) {
         $row = mysqli_fetch_array($sql_invoice_total);
         $new_invoice_amount = floatval($row['invoice_total']) - $invoice_discount;
 
-        
+
 
 
         mysqli_query($mysqli,"UPDATE invoices SET invoice_amount = $new_invoice_amount WHERE invoice_id = $invoice_id");
@@ -458,7 +468,7 @@ if (isset($_POST['edit_item'])) {
 }
 
 if (isset($_GET['delete_invoice_item'])) {
-    
+
     enforceUserPermission('module_sales', 2);
 
     $item_id = intval($_GET['delete_invoice_item']);
@@ -499,7 +509,7 @@ if (isset($_GET['delete_invoice_item'])) {
 }
 
 if (isset($_GET['email_invoice'])) {
-    
+
     $invoice_id = intval($_GET['email_invoice']);
 
     $sql = mysqli_query($mysqli,"SELECT * FROM invoices
@@ -577,7 +587,7 @@ if (isset($_GET['email_invoice'])) {
     $email_id = mysqli_insert_id($mysqli);
 
     flash_alert("Invoice sent!");
-    
+
     mysqli_query($mysqli,"INSERT INTO history SET history_status = 'Sent', history_description = 'Invoice sent to the mail queue ID: $email_id', history_invoice_id = $invoice_id");
 
     // Don't change the status to sent if the status is anything but draft
@@ -627,7 +637,7 @@ if (isset($_GET['email_invoice'])) {
 if (isset($_POST['export_invoices_csv'])) {
 
     enforceUserPermission('module_sales');
-    
+
     if (isset($_POST['client_id'])) {
         $client_id = intval($_POST['client_id']);
         $client_query = "AND invoice_client_id = $client_id";
@@ -690,7 +700,7 @@ if (isset($_POST['export_invoices_csv'])) {
 }
 
 if (isset($_POST['link_invoice_to_ticket'])) {
-    
+
     $invoice_id = intval($_POST['invoice_id']);
     $ticket_id = intval($_POST['ticket_id']);
 
@@ -703,7 +713,7 @@ if (isset($_POST['link_invoice_to_ticket'])) {
 }
 
 if (isset($_POST['add_ticket_to_invoice'])) {
-    
+
     $invoice_id = intval($_POST['invoice_id']);
     $ticket_id = intval($_POST['ticket_id']);
 
@@ -874,7 +884,7 @@ if (isset($_GET['export_invoice_pdf'])) {
     // Load items
     $sub_total = 0;
     $total_tax = 0;
-    
+
     $sql_items = mysqli_query($mysqli, "SELECT * FROM invoice_items WHERE item_invoice_id = $invoice_id ORDER BY item_order ASC");
     while ($item = mysqli_fetch_array($sql_items)) {
         $name = $item['item_name'];
@@ -933,7 +943,7 @@ if (isset($_GET['export_invoice_pdf'])) {
 
     $filename = preg_replace('/[^A-Za-z0-9_\-]/', '_', "{$invoice_date}_{$company_name}_{$client_name}_Invoice_{$invoice_prefix}{$invoice_number}");
     $pdf->Output("$filename.pdf", 'I');
-    
+
     exit;
 
 }

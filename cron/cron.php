@@ -317,13 +317,16 @@ if (mysqli_num_rows($sql_recurring_tickets) > 0) {
             $ticket_status = 2; // Set to open if we've auto-assigned an agent
         }
 
-        // Assign this new ticket the next ticket number
-        $ticket_number_sql = mysqli_fetch_array(mysqli_query($mysqli, "SELECT config_ticket_next_number FROM settings WHERE company_id = 1"));
-        $ticket_number = intval($ticket_number_sql['config_ticket_next_number']);
+        // Atomically increment and get the new ticket number
+        mysqli_query($mysqli, "
+            UPDATE settings
+            SET
+                config_ticket_next_number = LAST_INSERT_ID(config_ticket_next_number),
+                config_ticket_next_number = config_ticket_next_number + 1
+            WHERE company_id = 1
+        ");
 
-        // Increment config_ticket_next_number by 1 (for the next ticket)
-        $new_config_ticket_next_number = $ticket_number + 1;
-        mysqli_query($mysqli, "UPDATE settings SET config_ticket_next_number = $new_config_ticket_next_number WHERE company_id = 1");
+        $ticket_number = mysqli_insert_id($mysqli);
 
         // Raise the ticket
         mysqli_query($mysqli, "INSERT INTO tickets SET ticket_prefix = '$config_ticket_prefix', ticket_number = $ticket_number, ticket_source = 'Recurring', ticket_subject = '$subject', ticket_details = '$details', ticket_priority = '$priority', ticket_status = '$ticket_status', ticket_billable = $billable, ticket_created_by = $created_id, ticket_assigned_to = $assigned_id, ticket_contact_id = $contact_id, ticket_client_id = $client_id, ticket_asset_id = $asset_id, ticket_category = $category, ticket_recurring_ticket_id = $recurring_ticket_id");
@@ -600,14 +603,16 @@ while ($row = mysqli_fetch_array($sql_recurring_invoices)) {
     $recurring_payment_method = sanitizeInput($row['recurring_payment_method']);
     $recurring_payment_account_id = intval($row['recurring_payment_account_id']);
 
-    // Get the last Invoice Number and add 1 for the new invoice number
-    $sql_invoice_number = mysqli_query($mysqli, "SELECT * FROM settings WHERE company_id = 1");
-    $row = mysqli_fetch_array($sql_invoice_number);
-    $config_invoice_next_number = intval($row['config_invoice_next_number']);
+    // Atomically increment and get the new invoice number
+    mysqli_query($mysqli, "
+        UPDATE settings
+        SET
+            config_invoice_next_number = LAST_INSERT_ID(config_invoice_next_number),
+            config_invoice_next_number = config_invoice_next_number + 1
+        WHERE company_id = 1
+    ");
 
-    $new_invoice_number = $config_invoice_next_number;
-    $new_config_invoice_next_number = $config_invoice_next_number + 1;
-    mysqli_query($mysqli, "UPDATE settings SET config_invoice_next_number = $new_config_invoice_next_number WHERE company_id = 1");
+    $new_invoice_number = mysqli_insert_id($mysqli);
 
     //Generate a unique URL key for clients to access
     $url_key = randomString(156);

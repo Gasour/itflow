@@ -9,10 +9,9 @@
       </div>
       <form action="post.php" method="post" autocomplete="off">
         <input type="hidden" name="quote_id" value="<?php echo $quote_id; ?>">
-        <input type="hidden" name="client_net_terms" value="<?php echo $client_net_terms; ?>">
-        
+
         <div class="modal-body">
-         
+
           <div class="form-group">
             <label>Invoice Date <strong class="text-danger">*</strong></label>
             <div class="input-group">
@@ -22,7 +21,7 @@
               <input type="date" class="form-control" name="date" max="2999-12-31" value="<?php echo date("Y-m-d"); ?>" required>
             </div>
           </div>
-      
+
         </div>
         <div class="modal-footer">
           <button type="submit" name="add_quote_to_invoice" class="btn btn-primary text-bold"><strong><i class="fas fa-check mr-2"></i>Create Invoice</button>

@@ -103,11 +103,16 @@ if (isset($_POST['bulk_force_recurring_tickets'])) {
                 $config_ticket_from_email = sanitizeInput($config_ticket_from_email);
                 $config_base_url = sanitizeInput($config_base_url);
 
-                // Assign this new ticket the next ticket number & increment config_ticket_next_number by 1 (for the next ticket)
-                $ticket_number_sql = mysqli_fetch_array(mysqli_query($mysqli, "SELECT config_ticket_next_number FROM settings WHERE company_id = 1"));
-                $ticket_number = intval($ticket_number_sql['config_ticket_next_number']);
-                $new_config_ticket_next_number = $ticket_number + 1;
-                mysqli_query($mysqli, "UPDATE settings SET config_ticket_next_number = $new_config_ticket_next_number WHERE company_id = 1");
+                // Atomically increment and get the new ticket number
+                mysqli_query($mysqli, "
+                    UPDATE settings
+                    SET
+                        config_ticket_next_number = LAST_INSERT_ID(config_ticket_next_number),
+                        config_ticket_next_number = config_ticket_next_number + 1
+                    WHERE company_id = 1
+                ");
+
+                $ticket_number = mysqli_insert_id($mysqli);
 
                 // Raise the ticket
                 mysqli_query($mysqli, "INSERT INTO tickets SET ticket_prefix = '$config_ticket_prefix', ticket_number = $ticket_number, ticket_source = 'Recurring', ticket_subject = '$subject', ticket_details = '$details', ticket_priority = '$priority', ticket_status = '$ticket_status', ticket_billable = $billable, ticket_url_key = '$url_key', ticket_created_by = $created_id, ticket_assigned_to = $assigned_id, ticket_contact_id = $contact_id, ticket_client_id = $client_id, ticket_asset_id = $asset_id, ticket_category = $category, ticket_recurring_ticket_id = $recurring_ticket_id");
@@ -236,10 +241,16 @@ if (isset($_GET['force_recurring_ticket'])) {
         $config_ticket_from_email = sanitizeInput($config_ticket_from_email);
         $config_base_url = sanitizeInput($config_base_url);
 
-        // Assign this new ticket the next ticket number & increment config_ticket_next_number by 1 (for the next ticket)
-        $ticket_number = $config_ticket_next_number;
-        $new_config_ticket_next_number = $config_ticket_next_number + 1;
-        mysqli_query($mysqli, "UPDATE settings SET config_ticket_next_number = $new_config_ticket_next_number WHERE company_id = 1");
+        // Atomically increment and get the new ticket number
+        mysqli_query($mysqli, "
+            UPDATE settings
+            SET
+                config_ticket_next_number = LAST_INSERT_ID(config_ticket_next_number),
+                config_ticket_next_number = config_ticket_next_number + 1
+            WHERE company_id = 1
+        ");
+
+        $ticket_number = mysqli_insert_id($mysqli);
 
         // Raise the ticket
         mysqli_query($mysqli, "INSERT INTO tickets SET ticket_prefix = '$config_ticket_prefix', ticket_number = $ticket_number, ticket_source = 'Recurring', ticket_subject = '$subject', ticket_details = '$details', ticket_priority = '$priority', ticket_status = '$ticket_status', ticket_billable = $billable, ticket_url_key = '$url_key', ticket_created_by = $created_id, ticket_assigned_to = $assigned_id, ticket_contact_id = $contact_id, ticket_client_id = $client_id, ticket_asset_id = $asset_id, ticket_category = $category, ticket_recurring_ticket_id = $recurring_ticket_id");

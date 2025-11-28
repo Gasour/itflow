@@ -32,10 +32,16 @@ if (!empty($subject)) {
         $contact = intval($row['contact_id']);
     }
 
-    //Get the next Ticket Number and add 1 for the new ticket number
-    $ticket_number = $config_ticket_next_number;
-    $new_config_ticket_next_number = $config_ticket_next_number + 1;
-    mysqli_query($mysqli,"UPDATE settings SET config_ticket_next_number = $new_config_ticket_next_number WHERE company_id = 1");
+    // Atomically increment and get the new ticket number
+    mysqli_query($mysqli, "
+        UPDATE settings
+        SET
+            config_ticket_next_number = LAST_INSERT_ID(config_ticket_next_number),
+            config_ticket_next_number = config_ticket_next_number + 1
+        WHERE company_id = 1
+    ");
+
+    $ticket_number = mysqli_insert_id($mysqli);
 
     // Insert ticket
     $url_key = randomString(156);

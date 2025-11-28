@@ -1503,10 +1503,16 @@ if (isset($_POST['bulk_add_asset_ticket'])) {
 
             $subject_asset_prepended = "$asset_name - $subject";
 
-             // Get the next Ticket Number and update the config
-            $sql_ticket_number = mysqli_query($mysqli, "SELECT config_ticket_next_number FROM settings WHERE company_id = 1");
-            $ticket_number_row = mysqli_fetch_array($sql_ticket_number);
-            $ticket_number = intval($ticket_number_row['config_ticket_next_number']);
+            // Atomically increment and get the new ticket number
+            mysqli_query($mysqli, "
+                UPDATE settings
+                SET
+                    config_ticket_next_number = LAST_INSERT_ID(config_ticket_next_number),
+                    config_ticket_next_number = config_ticket_next_number + 1
+                WHERE company_id = 1
+            ");
+
+            $ticket_number = mysqli_insert_id($mysqli);
 
             // Sanitize Config Vars from get_settings.php and Session Vars from check_login.php
             $config_ticket_prefix = sanitizeInput($config_ticket_prefix);
@@ -1517,17 +1523,9 @@ if (isset($_POST['bulk_add_asset_ticket'])) {
             //Generate a unique URL key for clients to access
             $url_key = randomString(156);
 
-            // Increment the config ticket next number
-            $new_config_ticket_next_number = $ticket_number + 1;
-
-            mysqli_query($mysqli, "UPDATE settings SET config_ticket_next_number = $new_config_ticket_next_number WHERE company_id = 1");
-
             mysqli_query($mysqli, "INSERT INTO tickets SET ticket_prefix = '$config_ticket_prefix', ticket_number = $ticket_number, ticket_category = $category_id, ticket_subject = '$subject_asset_prepended', ticket_details = '$details', ticket_priority = '$priority', ticket_billable = $billable, ticket_status = $ticket_status, ticket_asset_id = $asset_id, ticket_created_by = $session_user_id, ticket_assigned_to = $assigned_to, ticket_url_key = '$url_key', ticket_client_id = $client_id, ticket_project_id = $project_id");
 
             $ticket_id = mysqli_insert_id($mysqli);
-
-            // Update the next ticket number in the database
-            mysqli_query($mysqli, "UPDATE settings SET config_ticket_next_number = $new_config_ticket_next_number WHERE company_id = 1");
 
             // Add Tasks
             if (!empty($_POST['tasks'])) {
@@ -2155,11 +2153,18 @@ if (isset($_POST['add_invoice_from_ticket'])) {
 
     if ($invoice_id == 0) {
 
-        //Get the last Invoice Number and add 1 for the new invoice number
-        $invoice_number = $config_invoice_next_number;
         $invoice_prefix = sanitizeInput($config_invoice_prefix);
-        $new_config_invoice_next_number = $config_invoice_next_number + 1;
-        mysqli_query($mysqli, "UPDATE settings SET config_invoice_next_number = $new_config_invoice_next_number WHERE company_id = 1");
+
+        // Atomically increment and get the new invoice number
+        mysqli_query($mysqli, "
+            UPDATE settings
+            SET
+                config_invoice_next_number = LAST_INSERT_ID(config_invoice_next_number),
+                config_invoice_next_number = config_invoice_next_number + 1
+            WHERE company_id = 1
+        ");
+
+        $invoice_number = mysqli_insert_id($mysqli);
 
         //Generate a unique URL key for clients to access
         $url_key = randomString(156);

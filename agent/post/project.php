@@ -20,11 +20,16 @@ if (isset($_POST['add_project'])) {
     // Sanitize Project Prefix
     $config_project_prefix = sanitizeInput($config_project_prefix);
 
-    // Get the next Project Number and add 1 for the new Project number
-    $project_number = $config_project_next_number;
-    $new_config_project_next_number = $config_project_next_number + 1;
+    // Atomically increment and get the new project number
+    mysqli_query($mysqli, "
+        UPDATE settings
+        SET
+            config_project_next_number = LAST_INSERT_ID(config_project_next_number),
+            config_project_next_number = config_project_next_number + 1
+        WHERE company_id = 1
+    ");
 
-    mysqli_query($mysqli, "UPDATE settings SET config_project_next_number = $new_config_project_next_number WHERE company_id = 1");
+    $project_number = mysqli_insert_id($mysqli);
 
     mysqli_query($mysqli, "INSERT INTO projects SET project_prefix = '$config_project_prefix', project_number = $project_number, project_name = '$project_name', project_description = '$project_description', project_due = '$due_date', project_manager = $project_manager, project_client_id = $client_id");
 
@@ -44,14 +49,18 @@ if (isset($_POST['add_project'])) {
             $ticket_template_subject = sanitizeInput($row['ticket_template_subject']);
             $ticket_template_details = mysqli_escape_string($mysqli, $row['ticket_template_details']);
 
-            // Get the next Ticket Number and add 1 for the new ticket number
-            $ticket_number = $config_ticket_next_number;
-            $new_config_ticket_next_number = $config_ticket_next_number + 1;
-            mysqli_query($mysqli, "UPDATE settings SET config_ticket_next_number = $new_config_ticket_next_number WHERE company_id = 1");
+            // Atomically increment and get the new ticket number
+            mysqli_query($mysqli, "
+                UPDATE settings
+                SET
+                    config_ticket_next_number = LAST_INSERT_ID(config_ticket_next_number),
+                    config_ticket_next_number = config_ticket_next_number + 1
+                WHERE company_id = 1
+            ");
+
+            $ticket_number = mysqli_insert_id($mysqli);
 
             mysqli_query($mysqli, "INSERT INTO tickets SET ticket_prefix = '$config_ticket_prefix', ticket_number = $ticket_number, ticket_subject = '$ticket_template_subject', ticket_details = '$ticket_template_details', ticket_priority = 'Low', ticket_status = 1, ticket_created_by = $session_user_id, ticket_client_id = $client_id, ticket_project_id = $project_id");
-
-            $config_ticket_next_number = $config_ticket_next_number + 1;
 
             $ticket_id = mysqli_insert_id($mysqli);
 
@@ -263,7 +272,7 @@ if (isset($_POST['link_closed_ticket_to_project'])) {
     logAction("Project", "Edit", "$session_name added ticket $ticket_prefix$ticket_number - $ticket_subject to project $project_name", $client_id, $project_id);
 
     flash_alert("Ticket added to <strong>$project_name</strong>");
-    
+
     redirect();
 
 }

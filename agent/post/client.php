@@ -237,7 +237,7 @@ if (isset($_POST['add_client'])) {
                 $client_id
             );
             mysqli_stmt_execute($query);
-            
+
             $extended_log_description .= ", SSL certificate $website added";
         }
     }
@@ -245,7 +245,7 @@ if (isset($_POST['add_client'])) {
     logAction("Client", "Create", "$session_name created client $name$extended_log_description", $client_id, $client_id);
 
     flash_alert("Client <strong>$name</strong> created");
-    
+
     redirect();
 
 }
@@ -774,10 +774,16 @@ if (isset($_POST['bulk_add_client_ticket'])) {
 
             $client_name = sanitizeInput($row['client_name']);
 
-             // Get the next Ticket Number and update the config
-            $sql_ticket_number = mysqli_query($mysqli, "SELECT config_ticket_next_number FROM settings WHERE company_id = 1");
-            $ticket_number_row = mysqli_fetch_array($sql_ticket_number);
-            $ticket_number = intval($ticket_number_row['config_ticket_next_number']);
+            // Atomically increment and get the new ticket number
+            mysqli_query($mysqli, "
+                UPDATE settings
+                SET
+                    config_ticket_next_number = LAST_INSERT_ID(config_ticket_next_number),
+                    config_ticket_next_number = config_ticket_next_number + 1
+                WHERE company_id = 1
+            ");
+
+            $ticket_number = mysqli_insert_id($mysqli);
 
             // Sanitize Config Vars from get_settings.php and Session Vars from check_login.php
             $config_ticket_prefix = sanitizeInput($config_ticket_prefix);
@@ -788,17 +794,9 @@ if (isset($_POST['bulk_add_client_ticket'])) {
             //Generate a unique URL key for clients to access
             $url_key = randomString(156);
 
-            // Increment the config ticket next number
-            $new_config_ticket_next_number = $ticket_number + 1;
-
-            mysqli_query($mysqli, "UPDATE settings SET config_ticket_next_number = $new_config_ticket_next_number WHERE company_id = 1");
-
             mysqli_query($mysqli, "INSERT INTO tickets SET ticket_prefix = '$config_ticket_prefix', ticket_number = $ticket_number, ticket_category = $category_id, ticket_subject = '$subject', ticket_details = '$details', ticket_priority = '$priority', ticket_billable = $billable, ticket_status = $ticket_status, ticket_created_by = $session_user_id, ticket_assigned_to = $assigned_to, ticket_url_key = '$url_key', ticket_client_id = $client_id, ticket_project_id = $project_id");
 
             $ticket_id = mysqli_insert_id($mysqli);
-
-            // Update the next ticket number in the database
-            mysqli_query($mysqli, "UPDATE settings SET config_ticket_next_number = $new_config_ticket_next_number WHERE company_id = 1");
 
             // Add Tasks
             if (!empty($_POST['tasks'])) {
@@ -1021,8 +1019,8 @@ if (isset($_POST['bulk_send_client_email']) && isset($_POST['client_ids'])) {
     $client_ids_str = implode(',', $client_ids);
 
     // SQL to fetch matching contacts
-    $sql = "SELECT * FROM contacts 
-            WHERE contact_client_id IN ($client_ids_str) 
+    $sql = "SELECT * FROM contacts
+            WHERE contact_client_id IN ($client_ids_str)
             $contact_filter_query";
 
     $result = mysqli_query($mysqli, $sql);
@@ -1181,7 +1179,7 @@ if (isset($_POST["export_client_pdf"])) {
     logAction("Client", "Export", "$session_name exported client data to a PDF file", $client_id, $client_id);
 
     // Get client record (joining primary contact and primary location)
-    $sql = mysqli_query($mysqli, "SELECT * FROM clients 
+    $sql = mysqli_query($mysqli, "SELECT * FROM clients
         LEFT JOIN contacts ON clients.client_id = contacts.contact_client_id AND contact_primary = 1
         LEFT JOIN locations ON clients.client_id = locations.location_client_id AND location_primary = 1
         WHERE client_id = $client_id
@@ -1208,53 +1206,53 @@ if (isset($_POST["export_client_pdf"])) {
     $sql_locations = mysqli_query($mysqli, "SELECT * FROM locations WHERE location_client_id = $client_id AND location_archived_at IS NULL ORDER BY location_name ASC");
     $sql_vendors = mysqli_query($mysqli, "SELECT * FROM vendors WHERE vendor_client_id = $client_id AND vendor_archived_at IS NULL ORDER BY vendor_name ASC");
     $sql_credentials = mysqli_query($mysqli, "SELECT * FROM credentials WHERE credential_client_id = $client_id ORDER BY credential_name ASC");
-    $sql_assets = mysqli_query($mysqli, "SELECT * FROM assets 
-        LEFT JOIN contacts ON asset_contact_id = contact_id 
+    $sql_assets = mysqli_query($mysqli, "SELECT * FROM assets
+        LEFT JOIN contacts ON asset_contact_id = contact_id
         LEFT JOIN locations ON asset_location_id = location_id
         LEFT JOIN asset_interfaces ON interface_asset_id = asset_id AND interface_primary = 1
         WHERE asset_client_id = $client_id
         AND asset_archived_at IS NULL
         ORDER BY asset_type ASC"
     );
-    $sql_asset_workstations = mysqli_query($mysqli, "SELECT * FROM assets 
-        LEFT JOIN contacts ON asset_contact_id = contact_id 
-        LEFT JOIN locations ON asset_location_id = location_id 
-        LEFT JOIN asset_interfaces ON interface_asset_id = asset_id AND interface_primary = 1 
-        WHERE asset_client_id = $client_id 
-        AND (asset_type = 'desktop' OR asset_type = 'laptop') 
-        AND asset_archived_at IS NULL 
+    $sql_asset_workstations = mysqli_query($mysqli, "SELECT * FROM assets
+        LEFT JOIN contacts ON asset_contact_id = contact_id
+        LEFT JOIN locations ON asset_location_id = location_id
+        LEFT JOIN asset_interfaces ON interface_asset_id = asset_id AND interface_primary = 1
+        WHERE asset_client_id = $client_id
+        AND (asset_type = 'desktop' OR asset_type = 'laptop')
+        AND asset_archived_at IS NULL
         ORDER BY asset_name ASC"
     );
-    $sql_asset_servers = mysqli_query($mysqli, "SELECT * FROM assets 
-        LEFT JOIN locations ON asset_location_id = location_id 
-        LEFT JOIN asset_interfaces ON interface_asset_id = asset_id AND interface_primary = 1 
-        WHERE asset_client_id = $client_id 
-        AND asset_type = 'server' 
-        AND asset_archived_at IS NULL 
+    $sql_asset_servers = mysqli_query($mysqli, "SELECT * FROM assets
+        LEFT JOIN locations ON asset_location_id = location_id
+        LEFT JOIN asset_interfaces ON interface_asset_id = asset_id AND interface_primary = 1
+        WHERE asset_client_id = $client_id
+        AND asset_type = 'server'
+        AND asset_archived_at IS NULL
         ORDER BY asset_name ASC"
     );
-    $sql_asset_vms = mysqli_query($mysqli, "SELECT * FROM assets 
-        LEFT JOIN asset_interfaces ON interface_asset_id = asset_id AND interface_primary = 1 
-        WHERE asset_client_id = $client_id 
-        AND asset_type = 'virtual machine' 
-        AND asset_archived_at IS NULL 
+    $sql_asset_vms = mysqli_query($mysqli, "SELECT * FROM assets
+        LEFT JOIN asset_interfaces ON interface_asset_id = asset_id AND interface_primary = 1
+        WHERE asset_client_id = $client_id
+        AND asset_type = 'virtual machine'
+        AND asset_archived_at IS NULL
         ORDER BY asset_name ASC"
     );
-    $sql_asset_network = mysqli_query($mysqli, "SELECT * FROM assets 
-        LEFT JOIN locations ON asset_location_id = location_id 
-        LEFT JOIN asset_interfaces ON interface_asset_id = asset_id AND interface_primary = 1 
-        WHERE asset_client_id = $client_id 
-        AND (asset_type = 'Firewall/Router' OR asset_type = 'Switch' OR asset_type = 'Access Point') 
-        AND asset_archived_at IS NULL 
+    $sql_asset_network = mysqli_query($mysqli, "SELECT * FROM assets
+        LEFT JOIN locations ON asset_location_id = location_id
+        LEFT JOIN asset_interfaces ON interface_asset_id = asset_id AND interface_primary = 1
+        WHERE asset_client_id = $client_id
+        AND (asset_type = 'Firewall/Router' OR asset_type = 'Switch' OR asset_type = 'Access Point')
+        AND asset_archived_at IS NULL
         ORDER BY asset_type ASC"
     );
-    $sql_asset_other = mysqli_query($mysqli, "SELECT * FROM assets 
-        LEFT JOIN contacts ON asset_contact_id = contact_id 
-        LEFT JOIN locations ON asset_location_id = location_id 
-        LEFT JOIN asset_interfaces ON interface_asset_id = asset_id AND interface_primary = 1 
-        WHERE asset_client_id = $client_id 
-        AND (asset_type NOT LIKE 'laptop' AND asset_type NOT LIKE 'desktop' AND asset_type NOT LIKE 'server' AND asset_type NOT LIKE 'virtual machine' AND asset_type NOT LIKE 'firewall/router' AND asset_type NOT LIKE 'switch' AND asset_type NOT LIKE 'access point') 
-        AND asset_archived_at IS NULL 
+    $sql_asset_other = mysqli_query($mysqli, "SELECT * FROM assets
+        LEFT JOIN contacts ON asset_contact_id = contact_id
+        LEFT JOIN locations ON asset_location_id = location_id
+        LEFT JOIN asset_interfaces ON interface_asset_id = asset_id AND interface_primary = 1
+        WHERE asset_client_id = $client_id
+        AND (asset_type NOT LIKE 'laptop' AND asset_type NOT LIKE 'desktop' AND asset_type NOT LIKE 'server' AND asset_type NOT LIKE 'virtual machine' AND asset_type NOT LIKE 'firewall/router' AND asset_type NOT LIKE 'switch' AND asset_type NOT LIKE 'access point')
+        AND asset_archived_at IS NULL
         ORDER BY asset_type ASC"
     );
     $sql_networks = mysqli_query($mysqli, "SELECT * FROM networks WHERE network_client_id = $client_id AND network_archived_at IS NULL ORDER BY network_name ASC");
@@ -1263,38 +1261,38 @@ if (isset($_POST["export_client_pdf"])) {
     $sql_software = mysqli_query($mysqli, "SELECT * FROM software WHERE software_client_id = $client_id AND software_archived_at IS NULL ORDER BY software_name ASC");
 
     $sql_user_licenses = mysqli_query($mysqli, "
-        SELECT 
+        SELECT
             contact_name,
             software_name
-        FROM 
+        FROM
             software_contacts
-        JOIN 
+        JOIN
             contacts ON software_contacts.contact_id = contacts.contact_id
-        JOIN 
+        JOIN
             software ON software_contacts.software_id = software.software_id
         WHERE software_archived_at IS NULL
         AND contact_archived_at IS NULL
         AND software_client_id = $client_id
         AND contact_client_id = $client_id
-        ORDER BY 
+        ORDER BY
             contact_name, software_name;"
     );
 
     $sql_asset_licenses = mysqli_query($mysqli, "
-        SELECT 
+        SELECT
             asset_name,
             software_name
-        FROM 
+        FROM
             software_assets
-        JOIN 
+        JOIN
             assets ON software_assets.asset_id = assets.asset_id
-        JOIN 
+        JOIN
             software ON software_assets.software_id = software.software_id
         WHERE software_archived_at IS NULL
         AND asset_archived_at IS NULL
         AND software_client_id = $client_id
         AND asset_client_id = $client_id
-        ORDER BY 
+        ORDER BY
             asset_name, software_name;"
     );
 

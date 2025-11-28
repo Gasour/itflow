@@ -23,10 +23,16 @@ if (isset($_POST['add_invoice_recurring'])) {
     $client_id = intval($row['invoice_client_id']);
     $category_id = intval($row['invoice_category_id']);
 
-    //Get the last Recurring Invoice Number and add 1 for the new Recurring Invoice number
-    $recurring_invoice_number = $config_recurring_invoice_next_number;
-    $new_config_recurring_invoice_next_number = $config_recurring_invoice_next_number + 1;
-    mysqli_query($mysqli,"UPDATE settings SET config_recurring_invoice_next_number = $new_config_recurring_invoice_next_number WHERE company_id = 1");
+    // Atomically increment and get the new recurring_invoice number
+    mysqli_query($mysqli, "
+        UPDATE settings
+        SET
+            config_recurring_invoice_next_number = LAST_INSERT_ID(config_recurring_invoice_next_number),
+            config_recurring_invoice_next_number = config_recurring_invoice_next_number + 1
+        WHERE company_id = 1
+    ");
+
+    $recurring_invoice_number = mysqli_insert_id($mysqli);
 
     mysqli_query($mysqli,"INSERT INTO recurring_invoices SET recurring_invoice_prefix = '$config_recurring_invoice_prefix', recurring_invoice_number = $recurring_invoice_number, recurring_invoice_scope = '$invoice_scope', recurring_invoice_frequency = '$recurring_invoice_frequency', recurring_invoice_next_date = DATE_ADD('$invoice_date', INTERVAL 1 $recurring_invoice_frequency), recurring_invoice_status = 1, recurring_invoice_amount = $invoice_amount, recurring_invoice_currency_code = '$invoice_currency_code', recurring_invoice_note = '$invoice_note', recurring_invoice_category_id = $category_id, recurring_invoice_client_id = $client_id");
 
@@ -66,10 +72,16 @@ if (isset($_POST['add_recurring_invoice'])) {
     $category = intval($_POST['category']);
     $scope = sanitizeInput($_POST['scope']);
 
-    //Get the last Recurring Number and add 1 for the new Recurring number
-    $recurring_invoice_number = $config_recurring_invoice_next_number;
-    $new_config_recurring_invoice_next_number = $config_recurring_invoice_next_number + 1;
-    mysqli_query($mysqli,"UPDATE settings SET config_recurring_invoice_next_number = $new_config_recurring_invoice_next_number WHERE company_id = 1");
+    // Atomically increment and get the new recurring_invoice number
+    mysqli_query($mysqli, "
+        UPDATE settings
+        SET
+            config_recurring_invoice_next_number = LAST_INSERT_ID(config_recurring_invoice_next_number),
+            config_recurring_invoice_next_number = config_recurring_invoice_next_number + 1
+        WHERE company_id = 1
+    ");
+
+    $recurring_invoice_number = mysqli_insert_id($mysqli);
 
     mysqli_query($mysqli,"INSERT INTO recurring_invoices SET recurring_invoice_prefix = '$config_recurring_invoice_prefix', recurring_invoice_number = $recurring_invoice_number, recurring_invoice_scope = '$scope', recurring_invoice_frequency = '$frequency', recurring_invoice_next_date = '$start_date', recurring_invoice_category_id = $category, recurring_invoice_status = 1, recurring_invoice_currency_code = '$session_company_currency', recurring_invoice_client_id = $client_id");
 
@@ -124,7 +136,7 @@ if (isset($_POST['edit_recurring_invoice'])) {
 }
 
 if (isset($_GET['delete_recurring_invoice'])) {
-    
+
     $recurring_invoice_id = intval($_GET['delete_recurring_invoice']);
 
     // Get Recurring Invoice Details and Client ID for Logging
@@ -234,7 +246,7 @@ if (isset($_POST['recurring_invoice_note'])) {
 }
 
 if (isset($_GET['delete_recurring_invoice_item'])) {
-    
+
     $item_id = intval($_GET['delete_recurring_invoice_item']);
 
     $sql = mysqli_query($mysqli,"SELECT * FROM invoice_items WHERE item_id = $item_id");
@@ -250,7 +262,7 @@ if (isset($_GET['delete_recurring_invoice_item'])) {
     $recurring_invoice_prefix = sanitizeInput($row['recurring_invoice_prefix']);
     $recurring_invoice_number = intval($row['recurring_invoice_number']);
     $client_id = intval($row['recurring_invoice_client_id']);
-    
+
     $new_recurring_invoice_amount = floatval($row['recurring_invoice_amount']) - $item_total;
 
     mysqli_query($mysqli,"UPDATE recurring_invoices SET recurring_invoice_amount = $new_recurring_invoice_amount WHERE recurring_invoice_id = $recurring_invoice_id");
@@ -266,7 +278,7 @@ if (isset($_GET['delete_recurring_invoice_item'])) {
 }
 
 if (isset($_GET['force_recurring'])) {
-    
+
     $recurring_invoice_id = intval($_GET['force_recurring']);
 
     $sql_recurring_invoices = mysqli_query($mysqli,"SELECT * FROM recurring_invoices, clients WHERE client_id = recurring_invoice_client_id AND recurring_invoice_id = $recurring_invoice_id");
@@ -286,10 +298,16 @@ if (isset($_GET['force_recurring'])) {
     $client_id = intval($row['recurring_invoice_client_id']);
     $client_net_terms = intval($row['client_net_terms']);
 
-    //Get the last Invoice Number and add 1 for the new invoice number
-    $new_invoice_number = $config_invoice_next_number;
-    $new_config_invoice_next_number = $config_invoice_next_number + 1;
-    mysqli_query($mysqli,"UPDATE settings SET config_invoice_next_number = $new_config_invoice_next_number WHERE company_id = 1");
+    // Atomically increment and get the new invoice number
+    mysqli_query($mysqli, "
+        UPDATE settings
+        SET
+            config_invoice_next_number = LAST_INSERT_ID(config_invoice_next_number),
+            config_invoice_next_number = config_invoice_next_number + 1
+        WHERE company_id = 1
+    ");
+
+    $new_invoice_number = mysqli_insert_id($mysqli);
 
     //Generate a unique URL key for clients to access
     $url_key = randomString(156);
@@ -472,7 +490,7 @@ if (isset($_POST['set_recurring_payment'])) {
 }
 
 if (isset($_POST['export_client_recurring_invoice_csv'])) {
-    
+
     $client_id = intval($_POST['client_id']);
 
     //get records from database
@@ -482,7 +500,7 @@ if (isset($_POST['export_client_recurring_invoice_csv'])) {
     $client_name = $row['client_name'];
 
     $sql = mysqli_query($mysqli,"SELECT * FROM recurring_invoices WHERE recurring_invoice_client_id = $client_id ORDER BY recurring_invoice_number ASC");
-    
+
     $num_rows = mysqli_num_rows($sql);
 
     if ($num_rows > 0) {
@@ -520,7 +538,7 @@ if (isset($_POST['export_client_recurring_invoice_csv'])) {
 }
 
 if (isset($_GET['recurring_invoice_email_notify'])) {
-    
+
     $recurring_invoice_email_notify = intval($_GET['recurring_invoice_email_notify']);
     $recurring_invoice_id = intval($_GET['recurring_invoice_id']);
 
@@ -535,7 +553,7 @@ if (isset($_GET['recurring_invoice_email_notify'])) {
     // Wording
     if ($recurring_invoice_email_notify) {
         $notify_wording = "On";
-    } else { 
+    } else {
         $notify_wording = "Off";
     }
 

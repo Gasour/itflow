@@ -14,10 +14,16 @@ if (isset($_POST['add_quote'])) {
 
     $client_id = intval($_POST['client']);
 
-    //Get the last Quote Number and add 1 for the new Quote number
-    $quote_number = $config_quote_next_number;
-    $new_config_quote_next_number = $config_quote_next_number + 1;
-    mysqli_query($mysqli,"UPDATE settings SET config_quote_next_number = $new_config_quote_next_number WHERE company_id = 1");
+    // Atomically increment and get the new quote number
+    mysqli_query($mysqli, "
+        UPDATE settings
+        SET
+            config_quote_next_number = LAST_INSERT_ID(config_quote_next_number),
+            config_quote_next_number = config_quote_next_number + 1
+        WHERE company_id = 1
+    ");
+
+    $quote_number = mysqli_insert_id($mysqli);
 
     //Generate a unique URL key for clients to access
     $quote_url_key = randomString(156);
@@ -49,10 +55,16 @@ if (isset($_POST['add_quote_copy'])) {
 
     $config_quote_prefix = sanitizeInput($config_quote_prefix);
 
-    //Get the last Invoice Number and add 1 for the new invoice number
-    $quote_number = $config_quote_next_number;
-    $new_config_quote_next_number = $config_quote_next_number + 1;
-    mysqli_query($mysqli,"UPDATE settings SET config_quote_next_number = $new_config_quote_next_number WHERE company_id = 1");
+    // Atomically increment and get the new quote number
+    mysqli_query($mysqli, "
+        UPDATE settings
+        SET
+            config_quote_next_number = LAST_INSERT_ID(config_quote_next_number),
+            config_quote_next_number = config_quote_next_number + 1
+        WHERE company_id = 1
+    ");
+
+    $quote_number = mysqli_insert_id($mysqli);
 
     $sql = mysqli_query($mysqli,"SELECT * FROM quotes WHERE quote_id = $quote_id");
     $row = mysqli_fetch_array($sql);
@@ -106,16 +118,10 @@ if (isset($_POST['add_quote_to_invoice'])) {
 
     $quote_id = intval($_POST['quote_id']);
     $date = sanitizeInput($_POST['date']);
-    $client_net_terms = intval($_POST['client_net_terms']);
 
-    $config_invoice_prefix = sanitizeInput($config_invoice_prefix);
-
-    $invoice_number = $config_invoice_next_number;
-    $new_config_invoice_next_number = $config_invoice_next_number + 1;
-    mysqli_query($mysqli,"UPDATE settings SET config_invoice_next_number = $new_config_invoice_next_number WHERE company_id = 1");
-
-    $sql = mysqli_query($mysqli,"SELECT * FROM quotes WHERE quote_id = $quote_id");
+    $sql = mysqli_query($mysqli,"SELECT * FROM clients, quotes WHERE client_id = quote_client_id AND quote_id = $quote_id");
     $row = mysqli_fetch_array($sql);
+    $client_net_terms = intval($row['client_net_terms']);
     $quote_prefix = sanitizeInput($row['quote_prefix']);
     $quote_number = sanitizeInput($row['quote_number']);
     $quote_discount_amount = floatval($row['quote_discount_amount']);
@@ -126,6 +132,19 @@ if (isset($_POST['add_quote_to_invoice'])) {
 
     $client_id = intval($row['quote_client_id']);
     $category_id = intval($row['quote_category_id']);
+
+    $config_invoice_prefix = sanitizeInput($config_invoice_prefix);
+
+    // Atomically increment and get the new invoice number
+    mysqli_query($mysqli, "
+        UPDATE settings
+        SET
+            config_invoice_next_number = LAST_INSERT_ID(config_invoice_next_number),
+            config_invoice_next_number = config_invoice_next_number + 1
+        WHERE company_id = 1
+    ");
+
+    $invoice_number = mysqli_insert_id($mysqli);
 
     //Generate a unique URL key for clients to access
     $url_key = randomString(156);
@@ -153,7 +172,7 @@ if (isset($_POST['add_quote_to_invoice'])) {
     }
 
     mysqli_query($mysqli,"UPDATE quotes SET quote_status = 'Invoiced' WHERE quote_id = $quote_id");
-    
+
     mysqli_query($mysqli,"INSERT INTO history SET history_status = 'Invoiced', history_description = 'Quote invoiced as $config_invoice_prefix$invoice_number', history_quote_id = $quote_id");
 
     logAction("Invoice", "Create", "$session_name created invoice $config_invoice_prefix$invoice_number from quote $config_quote_prefix$quote_number", $client_id, $new_invoice_id);
@@ -339,7 +358,7 @@ if (isset($_GET['delete_quote_item'])) {
     $quote_prefix = sanitizeInput($row['quote_prefix']);
     $quote_number = sanitizeInput($row['quote_number']);
     $client_id = intval($row['quote_client_id']);
-    
+
     $new_quote_amount = floatval($row['quote_amount']) - $item_total;
 
     mysqli_query($mysqli,"UPDATE quotes SET quote_amount = $new_quote_amount WHERE quote_id = $quote_id");
@@ -494,7 +513,7 @@ if (isset($_GET['email_quote'])) {
 
     // Update History
     mysqli_query($mysqli,"INSERT INTO history SET history_status = 'Sent', history_description = 'Emailed Quote', history_quote_id = $quote_id");
-    
+
     logAction("Quote", "Email", "$session_name emailed quote $quote_prefix$quote_number to $contact_email", $client_id, $quote_id);
 
     flash_alert("Quote sent!");
@@ -549,7 +568,7 @@ if(isset($_POST['export_quotes_csv'])){
     }
 
     $sql = mysqli_query($mysqli,"SELECT * FROM quotes $client_query ORDER BY quote_number ASC");
-    
+
     $num_rows = mysqli_num_rows($sql);
 
     if($num_rows > 0){
@@ -581,7 +600,7 @@ if(isset($_POST['export_quotes_csv'])){
         //output all remaining data on a file pointer
         fpassthru($f);
     }
-    
+
     logAction("Quote", "Export", "$session_name exported $num_rows quote(s) to a CSV file");
 
     flash_alert("Exported <strong>$num_rows</strong> quote(s)");
@@ -796,7 +815,7 @@ if (isset($_GET['export_quote_pdf'])) {
 
     $filename = preg_replace('/[^A-Za-z0-9_\-]/', '_', "{$quote_date}_{$company_name}_{$client_name}_Quote_{$quote_prefix}{$quote_number}");
     $pdf->Output("$filename.pdf", 'I');
-    
+
     exit;
 
 }
