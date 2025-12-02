@@ -92,11 +92,13 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                     </button>
                     <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown"></button>
                     <div class="dropdown-menu">
-                        <a class="dropdown-item text-dark" href="#" data-toggle="modal" data-target="#importClientModal">
+                        <a class="dropdown-item text-dark ajax-modal" href="#"
+                            data-modal-url="modals/client/client_import.php">
                             <i class="fa fa-fw fa-upload mr-2"></i>Import
                         </a>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item text-dark" href="#" data-toggle="modal" data-target="#exportClientModal">
+                        <a class="dropdown-item text-dark ajax-modal" href="#"
+                            data-modal-url="modals/client/client_export.php">
                             <i class="fa fa-fw fa-download mr-2"></i>Export
                         </a>
                     </div>
@@ -128,7 +130,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                         </div>
 
                         <div class="btn-group">
-                            <a href="?<?php echo $url_query_strings_sort ?>&archived=<?php if($archived == 1){ echo 0; } else { echo 1; } ?>" 
+                            <a href="?<?php echo $url_query_strings_sort ?>&archived=<?php if($archived == 1){ echo 0; } else { echo 1; } ?>"
                                 class="btn btn-<?php if ($archived == 1) { echo "primary"; } else { echo "default"; } ?>">
                                 <i class="fa fa-fw fa-archive mr-2"></i>Archived
                             </a>
@@ -137,38 +139,38 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                                     <i class="fas fa-fw fa-layer-group"></i><span class="d-none d-sm-inline ml-2">Action</span> (<span id="selectedCount">0</span>)
                                 </button>
                                 <div class="dropdown-menu">
-                                   <a class="dropdown-item ajax-modal" href="#" 
+                                   <a class="dropdown-item ajax-modal" href="#"
                                         data-modal-url="modals/client/client_bulk_add_ticket.php"
                                         data-modal-size="lg"
                                         data-bulk="true">
                                         <i class="fas fa-fw fa-life-ring mr-2"></i>Open Tickets
                                     </a>
                                     <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item ajax-modal" href="#" 
+                                    <a class="dropdown-item ajax-modal" href="#"
                                         data-modal-url="modals/client/client_bulk_edit_hourly_rate.php"
                                         data-bulk="true">
                                         <i class="fas fa-fw fa-clock mr-2"></i>Set Hourly Rate
                                     </a>
                                     <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item ajax-modal" href="#" 
+                                    <a class="dropdown-item ajax-modal" href="#"
                                         data-modal-url="modals/client/client_bulk_edit_industry.php"
                                         data-bulk="true">
                                         <i class="fas fa-fw fa-briefcase mr-2"></i>Set Industry
                                     </a>
                                     <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item ajax-modal" href="#" 
+                                    <a class="dropdown-item ajax-modal" href="#"
                                         data-modal-url="modals/client/client_bulk_edit_referral.php"
                                         data-bulk="true">
                                         <i class="fas fa-fw fa-link mr-2"></i>Set Referral
                                     </a>
                                     <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item ajax-modal" href="#" 
+                                    <a class="dropdown-item ajax-modal" href="#"
                                         data-modal-url="modals/client/client_bulk_assign_tags.php"
                                         data-bulk="true">
                                         <i class="fas fa-fw fa-tags mr-2"></i>Assign Tags
                                     </a>
                                     <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item ajax-modal" href="#" 
+                                    <a class="dropdown-item ajax-modal" href="#"
                                         data-modal-url="modals/client/client_bulk_email.php"
                                         data-modal-size="lg"
                                         data-bulk="true">
@@ -193,15 +195,15 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                     </div>
                 </div>
             </div>
-            <div 
-                class="collapse 
-                    <?php 
+            <div
+                class="collapse
+                    <?php
                     if (isset($_GET['dtf']) && $_GET['dtf'] !== '1970-01-01'
                         || $industry_filter
                         || $referral_filter
                         || (isset($_GET['tags']) && is_array($_GET['tags']))
                     )
-                    { echo "show"; } 
+                    { echo "show"; }
                     ?>
                 "
                 id="advancedFilter"
@@ -220,10 +222,10 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                         <div class="form-group">
                             <label>Tag</label>
                             <select onchange="this.form.submit()" class="form-control select2" name="tags[]" data-placeholder="- Select Tags -" multiple>
-                                <?php 
+                                <?php
                                 $sql_tags_filter = mysqli_query($mysqli, "
                                     SELECT tags.tag_id, tags.tag_name
-                                    FROM tags 
+                                    FROM tags
                                     LEFT JOIN client_tags ON client_tags.tag_id = tags.tag_id
                                     WHERE tag_type = 1
                                     GROUP BY tags.tag_id
@@ -281,7 +283,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
             </div>
         </form>
     </div>
-    
+
     <form id="bulkActions" action="post.php" method="post">
         <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?>">
         <div class="table-responsive-sm">
@@ -364,11 +366,11 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                     }
 
                     // Counts
-                    
+
                     // Contact Count
                     $row = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT COUNT('contact_id') AS num FROM contacts WHERE contact_client_id = $client_id AND contact_archived_at IS NULL"));
                     $contact_count = $row['num'];
-                    if ($contact_count) { 
+                    if ($contact_count) {
                         $contact_count_display = "<a href='contacts.php?client_id=$client_id' class='mr-2 mb-1 badge badge-pill badge-dark p-2' title='Contacts ($contact_count)'><i class='fas fa-fw fa-users mr-2'></i>$contact_count</a>";
                     } else {
                         $contact_count_display = '';
@@ -377,34 +379,34 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                     // Vendors Count
                     $row = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT COUNT('vendor_id') AS num FROM vendors WHERE vendor_client_id = $client_id AND vendor_archived_at IS NULL"));
                     $vendor_count = $row['num'];
-                    if ($vendor_count) { 
+                    if ($vendor_count) {
                         $vendor_count_display = "<a href='vendors.php?client_id=$client_id' class='mr-2 mb-1 badge badge-pill badge-dark p-2' title='Vendors ($vendor_count)'><i class='fas fa-fw fa-building mr-2'></i>$vendor_count</a>";
                     } else {
                         $vendor_count_display = '';
                     }
-                    
+
                     // Asset Count
                     $row = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT COUNT('asset_id') AS num FROM assets WHERE asset_client_id = $client_id AND asset_archived_at IS NULL"));
                     $asset_count = $row['num'];
-                    if ($asset_count) { 
+                    if ($asset_count) {
                         $asset_count_display = "<a href='assets.php?client_id=$client_id' class='mr-2 mb-1 badge badge-pill badge-secondary p-2' title='Assets ($asset_count)'><i class='fas fa-fw fa-desktop mr-2'></i>$asset_count</a>";
                     } else {
                         $asset_count_display = '';
                     }
-                    
+
                     // Credential Count
                     $row = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT COUNT('credential_id') AS num FROM credentials WHERE credential_client_id = $client_id AND credential_archived_at IS NULL"));
                     $credential_count = $row['num'];
-                    if ($credential_count) { 
+                    if ($credential_count) {
                         $credential_count_display = "<a href='credentials.php?client_id=$client_id' class='mr-2 mb-1 badge badge-pill badge-secondary p-2' title='Credentials ($credential_count)'><i class='fas fa-fw fa-key mr-2'></i>$credential_count</a>";
                     } else {
                         $credential_count_display = '';
                     }
-                    
+
                     // Software Count
                     $row = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT COUNT('software_id') AS num FROM software WHERE software_client_id = $client_id AND software_archived_at IS NULL"));
                     $software_count = $row['num'];
-                    if ($software_count) { 
+                    if ($software_count) {
                         $software_count_display = "<a href='software.php?client_id=$client_id' class='mr-2 mb-1 badge badge-pill badge-secondary p-2' title='Licenses ($software_count)'><i class='fas fa-fw fa-cube mr-2'></i>$software_count</a>";
                     } else {
                         $software_count_display = '';
@@ -413,7 +415,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                     // Ticket Count
                     $row = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT COUNT('ticket_id') AS num FROM tickets WHERE ticket_client_id = $client_id AND ticket_archived_at IS NULL"));
                     $ticket_count = $row['num'];
-                    if ($ticket_count) { 
+                    if ($ticket_count) {
                         $ticket_count_display = "<a href='tickets.php?client_id=$client_id' class='mr-2 mb-1 badge badge-pill badge-secondary p-2' title='Tickets ($ticket_count)'><i class='fas fa-fw fa-life-ring mr-2'></i>$ticket_count</a>";
                     } else {
                         $ticket_count_display = '';
@@ -518,10 +520,10 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                             }
 
                             if (!empty($contact_name)) { ?>
-                                <div class="text-bold">   
+                                <div class="text-bold">
                                     <i class="fa fa-fw fa-user text-secondary mr-2 mb-2"></i><a class="ajax-modal" href="#"
                                         data-modal-url="modals/contact/contact_details.php?client_id=<?= $client_id ?>&id=<?= $contact_id ?>" data-modal-size="lg"><?= $contact_name; ?>
-                                        
+
                                      </a>
                                 </div>
                             <?php } else {
@@ -617,12 +619,10 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
     </form>
      <!-- Ends Card Body -->
     <?php require_once "../includes/filter_footer.php"; ?>
-    
+
 </div> <!-- End Card -->
 
 <script src="../js/bulk_actions.js"></script>
 
 <?php
-require_once "modals/client/client_import.php";
-require_once "modals/client/client_export.php";
 require_once "../includes/footer.php";

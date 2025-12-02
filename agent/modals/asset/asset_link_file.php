@@ -48,7 +48,7 @@ ob_start();
                         AND asset_files.asset_id IS NULL
                         ORDER BY folders.folder_name ASC, files.file_name ASC
                     ");
-                    
+
                     while ($row = mysqli_fetch_array($sql_files_select)) {
                         $file_id = intval($row['file_id']);
                         $file_name = nullable_htmlentities($row['file_name']);
@@ -70,4 +70,3 @@ ob_start();
 
 <?php
 require_once '../../../includes/modal_footer.php';
-?>
