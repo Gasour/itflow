@@ -52,6 +52,7 @@ $extensions = [
     'php-mbstring' => 'mbstring',
     'php-gd' => 'gd',
     'php-zip' => 'zip',
+    'php-xml' => 'xml',
 ];
 
 foreach ($extensions as $name => $ext) {
@@ -682,7 +683,7 @@ $mysqli->close();
                 </tbody>
             </table>
         </div>
-        
+
 
         <!-- Database Structure Comparison Table -->
         <h3 class="mt-3">Database Structure Comparison</h3>
@@ -765,4 +766,3 @@ $mysqli->close();
 <?php
 
 require_once "../includes/footer.php";
-

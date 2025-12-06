@@ -4,6 +4,9 @@ This file documents all notable changes made to ITFlow.
 
 ## [25.12] Stable Release
 
+### Breaking Changes ###
+- Existing installs php-xml extension needs to be installed for document creation and editing.
+
 ### Major Changes
 - Consolidated "Files" and "Documents" into a single section called **Files**.
 

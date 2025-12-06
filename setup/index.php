@@ -808,7 +808,7 @@ if (isset($_POST['add_telemetry'])) {
                     $_SESSION['alert_message'] = '';
                 }
                 ?>
-                
+
                 <?php if (isset($_GET['checks'])) {
 
                     $checks = [];
@@ -821,6 +821,7 @@ if (isset($_POST['add_telemetry'])) {
                         'php-curl' => 'curl',
                         'php-mbstring' => 'mbstring',
                         'php-gd' => 'gd',
+                        'php-xml' => 'xml',
                     ];
 
                     foreach ($extensions as $name => $ext) {
@@ -1107,7 +1108,7 @@ if (isset($_POST['add_telemetry'])) {
                                     <?php endforeach; ?>
                                 </tbody>
                             </table>
-                            
+
                             <hr>
 
                             <a href="?database" class="btn btn-primary text-bold">Next (Database)<i class="fa fa-fw fa-arrow-circle-right ml-2"></i></a>
